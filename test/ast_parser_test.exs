@@ -114,6 +114,24 @@ defmodule ExcellentMigrations.AstParserTest do
     assert [check_constraint_added: 1] == AstParser.parse(ast)
   end
 
+  test "does not detect check constraint added with validate: false" do
+    ast =
+      string_to_ast(~s"""
+      create constraint("ingredients", :price_must_be_positive, check: "price > 0", validate: false)
+      """)
+
+    assert [] == AstParser.parse(ast)
+  end
+
+  test "detects check constraint added with validate: true" do
+    ast =
+      string_to_ast(~s"""
+      create constraint("ingredients", :price_must_be_positive, check: "price > 0", validate: true)
+      """)
+
+    assert [check_constraint_added: 1] == AstParser.parse(ast)
+  end
+
   test "detects records modified" do
     ast1 =
       string_to_ast("""
@@ -143,11 +161,38 @@ defmodule ExcellentMigrations.AstParserTest do
         |> Repo.update!()
       """)
 
+    ast6 = string_to_ast("Repo.insert_or_update!(changeset)")
+
     assert [operation_insert: 3] == AstParser.parse(ast1)
     assert [operation_insert: 1] == AstParser.parse(ast2)
     assert [operation_update: 1] == AstParser.parse(ast3)
     assert [operation_delete: 1] == AstParser.parse(ast4)
     assert [operation_update: 5] == AstParser.parse(ast5)
+    assert [operation_insert: 1] == AstParser.parse(ast6)
+  end
+
+  test "does not flag read-only Repo operations" do
+    ast1 = string_to_ast("Repo.one(query)")
+    ast2 = string_to_ast("Repo.one!(query)")
+    ast3 = string_to_ast("Repo.all(query)")
+    ast4 = string_to_ast("Repo.get(User, id)")
+    ast5 = string_to_ast("Repo.get!(User, id)")
+    ast6 = string_to_ast("Repo.get_by(User, email: email)")
+    ast7 = string_to_ast("Repo.query(sql)")
+    ast8 = string_to_ast("Repo.query!(sql)")
+    ast9 = string_to_ast("Repo.aggregate(query, :count)")
+    ast10 = string_to_ast("Repo.exists?(query)")
+
+    assert [] == AstParser.parse(ast1)
+    assert [] == AstParser.parse(ast2)
+    assert [] == AstParser.parse(ast3)
+    assert [] == AstParser.parse(ast4)
+    assert [] == AstParser.parse(ast5)
+    assert [] == AstParser.parse(ast6)
+    assert [] == AstParser.parse(ast7)
+    assert [] == AstParser.parse(ast8)
+    assert [] == AstParser.parse(ast9)
+    assert [] == AstParser.parse(ast10)
   end
 
   test "detects danger and safety assured" do
