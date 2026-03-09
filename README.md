@@ -54,12 +54,10 @@ Add `ExcellentMigrations.CredoCheck.MigrationsSafety` and include your migration
         ]
       },
       # …
-      checks: %{
-        enabled: [
-          {ExcellentMigrations.CredoCheck.MigrationsSafety, []},  # <-- and this
-          # …
-        ]
-      }
+      checks: [
+        {ExcellentMigrations.CredoCheck.MigrationsSafety, []},  # <-- and this
+        # …
+      ]
     }
   ]
 }

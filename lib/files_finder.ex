@@ -16,7 +16,11 @@ defmodule ExcellentMigrations.FilesFinder do
     start_after =
       :excellent_migrations
       |> Application.get_env(:start_after)
-      |> timestamp_str_to_datetime() || DateTime.from_unix!(0)
+      |> timestamp_str_to_datetime()
+      |> case do
+        nil -> DateTime.from_unix!(0)
+        dt -> dt
+      end
 
     "**/migrations/*.exs"
     |> Path.wildcard()
@@ -104,7 +108,11 @@ defmodule ExcellentMigrations.FilesFinder do
     |> Path.basename()
     |> String.split("_")
     |> hd()
-    |> timestamp_str_to_datetime() || DateTime.from_unix!(1)
+    |> timestamp_str_to_datetime()
+    |> case do
+      nil -> DateTime.from_unix!(1)
+      dt -> dt
+    end
   end
 
   @doc """

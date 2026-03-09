@@ -24,7 +24,11 @@ if Code.ensure_loaded?(Credo.Check) do
       start_after =
         :excellent_migrations
         |> Application.get_env(:start_after)
-        |> FilesFinder.timestamp_str_to_datetime() || DateTime.from_unix!(0)
+        |> FilesFinder.timestamp_str_to_datetime()
+        |> case do
+          nil -> DateTime.from_unix!(0)
+          dt -> dt
+        end
 
       if FilesFinder.relevant_file?(source_file.filename, start_after) do
         detect_dangers(source_file, params)
